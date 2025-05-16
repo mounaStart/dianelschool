@@ -1,0 +1,21 @@
+php artisan migrate --path=/database/migrations/2025_03_07_230129_create_frais_scolaires_table.php
+php artisan migrate --path=/database/migrations/2025_03_07_230134_create_factures_table.php
+php artisan migrate --path=/database/migrations/2025_03_07_230153_create_paiements_table.php
+php artisan migrate --path=/database/migrations/2025_05_07_203334_add_user_id_to_parents_table.php
+//table pivot
+php artisan make:migration create_facture_frais_table --create=facture_frais
+php artisan migrate --path=/database/migrations/2025_03_08_113716_create_facture_frais_table.php
+
+php artisan make:command RappelPaiement
+php artisan make:mail RappelPaiementMail
+php artisan schedule:work
+
+/// export
+php artisan make:export FraisScolairesExport  --model=FraisScolaire 
+php artisan make:migration create_eleve_parent_table
+
+php artisan make:middleware CheckRole
+php artisan tinker
+
+$user = \App\Models\User::where('email', 'mounasrydia73@gmail.com')->first();
+$user->enfants; // Cela doit retourner une collection
