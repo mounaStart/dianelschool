@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: rimschool-laravel
+    env: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: "php artisan serve --host=0.0.0.0 --port=10000"
+    envVars:
+      - key: APP_NAME
+        value: Laravel
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://rimchott.onrender.com
+
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: <TON_HOST_RENDER_MYSQL>
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: rimschool
+      - key: DB_USERNAME
+        value: <TON_UTILISATEUR_RENDER>
+      - key: DB_PASSWORD
+        value: <TON_MOT_DE_PASSE_RENDER>
+
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: debug
+
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_LIFETIME
+        value: 120
+
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: local

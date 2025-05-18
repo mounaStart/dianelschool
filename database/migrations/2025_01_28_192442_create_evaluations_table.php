@@ -16,7 +16,7 @@ return new class extends Migration
         $table->string('titre'); // Exemple : "Examen de Mathématiques"
         $table->date('date');
         $table->foreignId('classe_id')->constrained()->onDelete('cascade');
-        $table->foreignId('matiere_id')->constrained()->onDelete('cascade');
+        $table->foreignId('matier_id')->constrained()->onDelete('cascade');
         $table->timestamps();
     });
 }
