@@ -26,7 +26,7 @@ RUN chown -R www-data:www-data /var/www/html \
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Générer la clé de l'application Laravel
-RUN php artisan key:generate
+#RUN php artisan key:generate
 
 # Définir les permissions nécessaires à Laravel
 RUN chmod -R 775 storage bootstrap/cache
