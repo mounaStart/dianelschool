@@ -17,6 +17,8 @@ COPY . /var/www/html
 
 # Définir le bon répertoire de travail
 WORKDIR /var/www/html
+# Copie .env.example en .env et génère la clé Laravel
+RUN cp .env.example .env && php artisan key:generate
 
 # Donner les bons droits
 RUN chown -R www-data:www-data /var/www/html \
