@@ -31,5 +31,14 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 # Définir les permissions nécessaires à Laravel
 RUN chmod -R 775 storage bootstrap/cache
 
+# Configuration Apache pour servir depuis public/
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
 # Expose le port Apache
 EXPOSE 80
