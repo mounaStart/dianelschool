@@ -1,4 +1,4 @@
-# Utilise une image officielle PHP avec Apache
+ # Utilise une image officielle PHP avec Apache
 FROM php:8.2-apache
 
 # Installe les extensions PHP nécessaires à Laravel
@@ -24,7 +24,10 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Installe les dépendances Laravel
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Vérifie que le dossier vendor a bien été créé
 RUN test -d vendor || (echo "Vendor folder missing!" && exit 1)
+
 # Copie .env et génère la clé Laravel (APRÈS composer install)
 RUN cp .env.example .env && php artisan key:generate
 
@@ -42,3 +45,12 @@ RUN echo '<VirtualHost *:80>\n\
 
 # Expose le port Apache
 EXPOSE 80
+
+# 🔎 Affiche les dernières erreurs Laravel dans les logs si elles existent
+RUN if [ -f storage/logs/laravel.log ]; then \
+        echo "===== DÉBUT LOG LARAVEL =====" && \
+        tail -n 50 storage/logs/laravel.log && \
+        echo "===== FIN LOG LARAVEL ====="; \
+    else \
+        echo "Aucun fichier de log Laravel trouvé."; \
+    fi
