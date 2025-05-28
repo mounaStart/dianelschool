@@ -29,8 +29,12 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 RUN test -d vendor || (echo "Vendor folder missing!" && exit 1)
 
 # Copie .env et génère la clé Laravel (APRÈS composer install)
-RUN cp .env.example .env && php artisan key:generate
+#RUN cp .env.example .env && php artisan key:generate
 
+# Crée .env à partir de .env.example si non présent
+RUN if [ ! -f .env ]; then cp .env.example .env; fi \
+    && php artisan key:generate
+    
 # Redonne les droits après la génération de la clé (par sécurité)
 RUN chmod -R 775 storage bootstrap/cache
 
