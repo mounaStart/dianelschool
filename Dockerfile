@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 
 # Configure Apache
 RUN a2enmod rewrite
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
 # Préparation du dossier
 RUN mkdir -p /var/www/html \
