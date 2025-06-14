@@ -1,36 +1,59 @@
-FROM php:8.2-apache
+# Étape 1 : Construction de l'environnement PHP
+FROM php:8.2-apache AS builder
 
-# Installations de base
+# Installer les dépendances système
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev zip libpng-dev libonig-dev \
-    libxml2-dev libgd-dev curl libpq-dev && \
-    docker-php-ext-install -j$(nproc) \
-    pdo pdo_mysql pdo_pgsql pgsql mbstring zip exif pcntl bcmath gd opcache
+    git \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    && docker-php-ext-install \
+    pdo pdo_mysql pdo_pgsql \
+    mbstring zip exif pcntl bcmath
 
-# Configure Apache
+# Configurer Apache
 RUN a2enmod rewrite
 COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# Préparation du dossier
-RUN mkdir -p /var/www/html \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html
-
-WORKDIR /var/www/html
-
-# Install Composer
+# Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install dependencies first (optimize build cache)
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --verbose
+# Créer et configurer le répertoire de travail
+WORKDIR /var/www/html
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
-# Copy the rest
+# Étape 2 : Installation des dépendances avec cache optimisé
+FROM builder AS dependencies
+
+# Copier uniquement les fichiers nécessaires pour composer
+COPY composer.json composer.lock ./
+
+# Installer les dépendances (sans scripts pour éviter l'erreur artisan)
+RUN composer install --no-interaction --prefer-dist --no-scripts --no-autoloader
+
+# Étape 3 : Construction finale
+FROM builder AS final
+
+# Copier les dépendances installées
+COPY --from=dependencies /var/www/html/vendor /var/www/html/vendor
+
+# Copier le reste de l'application
 COPY . .
 
-# Laravel setup
-RUN test -f .env || cp .env.example .env \
+# Générer l'autoloader et exécuter les scripts artisan
+RUN composer dump-autoload --optimize \
+    && php artisan package:discover --ansi \
+    && php artisan optimize:clear
+
+# Configurer l'environnement Laravel
+RUN if [ ! -f .env ]; then cp .env.example .env; fi \
     && php artisan key:generate \
     && chmod -R 775 storage bootstrap/cache
 
+# Exposer le port et démarrer Apache
 EXPOSE 80
+CMD ["apache2-foreground"]
