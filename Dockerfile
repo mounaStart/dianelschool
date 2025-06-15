@@ -66,12 +66,12 @@ RUN if [ ! -f .env ]; then cp .env.example .env; fi \
 RUN php artisan optimize
 
 # 12. Configuration Apache alternative (si .docker/vhost.conf n'existe pas)
-RUN echo '<VirtualHost *:80>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
+RUN echo '<VirtualHost *:80>\
+    DocumentRoot /var/www/html/public\
+    <Directory /var/www/html/public>\
+        AllowOverride All\
+        Require all granted\
+    </Directory>\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # 13. Expose le port Apache
