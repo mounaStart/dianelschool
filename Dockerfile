@@ -2,24 +2,25 @@
 FROM php:8.2-apache
 
 # Étape 2: Met à jour le système et installe les dépendances
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libgd-dev \
-    curl \
-    libpq-dev \          # Nécessaire pour PostgreSQL
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y \
+        git \
+        unzip \
+        libzip-dev \
+        libpng-dev \
+        libonig-dev \
+        libxml2-dev \
+        libgd-dev \
+        curl \
+        libpq-dev && \          # Nécessaire pour PostgreSQL
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Étape 3: Installe les extensions PHP nécessaires
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
-    pgsql \              # Extension PostgreSQL native (manquante dans votre erreur)
+    pgsql \              # Extension PostgreSQL native
     pdo_pgsql \          # PDO pour PostgreSQL
     mbstring \
     zip \
@@ -42,12 +43,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Étape 8: Crée les répertoires Laravel et configure les permissions
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    && mkdir -p bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage/framework/{sessions,views,cache} && \
+    mkdir -p bootstrap/cache && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 775 storage bootstrap/cache
 
-# Étape 9: Copie et installe les dépendances Composer (avec gestion de l'erreur ext-pgsql)
+# Étape 9: Copie et installe les dépendances Composer
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
@@ -55,12 +56,12 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-s
 COPY . .
 
 # Étape 11: Configure l'environnement Laravel
-RUN if [ ! -f .env ]; then cp .env.example .env; fi \
-    && php artisan key:generate \
-    && php artisan config:clear \
-    && php artisan view:clear \
-    && php artisan route:clear \
-    && php artisan optimize
+RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
+    php artisan key:generate && \
+    php artisan config:clear && \
+    php artisan view:clear && \
+    php artisan route:clear && \
+    php artisan optimize
 
 # Étape 12: Expose le port 80 et lance Apache
 EXPOSE 80
