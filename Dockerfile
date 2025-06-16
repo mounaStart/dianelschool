@@ -1,7 +1,7 @@
-# Utilise une image officielle PHP avec Apache
+# Étape 1: Utilise l'image officielle PHP 8.2 avec Apache
 FROM php:8.2-apache
 
-# 1. Installe les dépendances système (tout sur une seule ligne)
+# Étape 2: Met à jour le système et installe les dépendances
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -11,15 +11,16 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libgd-dev \
     curl \
-    libpq-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    libpq-dev \          # Nécessaire pour PostgreSQL
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2. Installe les extensions PHP
+# Étape 3: Installe les extensions PHP nécessaires
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
-    pdo_pgsql \
+    pgsql \              # Extension PostgreSQL native (manquante dans votre erreur)
+    pdo_pgsql \          # PDO pour PostgreSQL
     mbstring \
     zip \
     exif \
@@ -28,46 +29,39 @@ RUN docker-php-ext-install \
     gd \
     opcache
 
-# 3. Configure Apache
+# Étape 4: Active le module rewrite d'Apache
 RUN a2enmod rewrite
+
+# Étape 5: Configure le virtualhost Apache
 COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# 4. Installe Composer
+# Étape 6: Installe Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 5. Configure le répertoire de travail
+# Étape 7: Configure le répertoire de travail
 WORKDIR /var/www/html
 
-# 6. Crée les répertoires et permissions
-RUN mkdir -p storage/framework/{sessions,views,cache} && \
-    mkdir -p bootstrap/cache && \
-    chown -R www-data:www-data /var/www/html && \
-    chmod -R 775 storage bootstrap/cache
+# Étape 8: Crée les répertoires Laravel et configure les permissions
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
-# 7. Installation des dépendances Composer
+# Étape 9: Copie et installe les dépendances Composer (avec gestion de l'erreur ext-pgsql)
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
-# 8. Copie de l'application
+# Étape 10: Copie toute l'application
 COPY . .
 
-# 9. Configuration Laravel
-RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
-    php artisan key:generate && \
-    php artisan config:clear && \
-    php artisan view:clear && \
-    php artisan route:clear && \
-    php artisan optimize
+# Étape 11: Configure l'environnement Laravel
+RUN if [ ! -f .env ]; then cp .env.example .env; fi \
+    && php artisan key:generate \
+    && php artisan config:clear \
+    && php artisan view:clear \
+    && php artisan route:clear \
+    && php artisan optimize
 
-# 10. Configuration Apache
-RUN echo '<VirtualHost *:80>\
-    DocumentRoot /var/www/html/public\
-    <Directory /var/www/html/public>\
-        AllowOverride All\
-        Require all granted\
-    </Directory>\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
-
-# 11. Port et commande
+# Étape 12: Expose le port 80 et lance Apache
 EXPOSE 80
-CMD ["apache2-fore
+CMD ["apache2-foreground"]
