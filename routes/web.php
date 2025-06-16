@@ -143,7 +143,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Évaluations et notes
     Route::resource('evaluations', EvaluationController::class);
-    Route::post('/evaluations/store', [EvaluationController::class, 'store'])->name('evaluations.store');
+    //Route::post('/evaluations/store', [EvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');
     Route::get('/notes/create/{evaluation}', [NoteController::class, 'create'])->name('notes.create');
     Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
