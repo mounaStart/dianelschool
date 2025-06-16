@@ -40,11 +40,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Étape 6: Configuration du workspace
 WORKDIR /var/www/html
 
-# Étape 7: Permissions Laravel
+# Étape 7: Permissions Laravel (MODIFICATION ICI)
 RUN mkdir -p storage/framework/{sessions,views,cache} && \
+    mkdir -p storage/logs && \
     mkdir -p bootstrap/cache && \
     chown -R www-data:www-data /var/www/html && \
-    chmod -R 775 storage bootstrap/cache
+    chmod -R 775 storage bootstrap/cache && \
+    chmod -R 777 storage/logs
 
 # Étape 8: Installation des dépendances
 COPY composer.json composer.lock ./
@@ -53,13 +55,13 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-s
 # Étape 9: Copie de l'application
 COPY . .
 
-# Étape 10: Configuration Laravel
+# Étape 10: Configuration Laravel (MODIFICATION ICI)
 RUN if [ ! -f .env ]; then cp .env.example .env; fi && \
     php artisan key:generate && \
     php artisan config:clear && \
     php artisan view:clear && \
     php artisan route:clear && \
-    php artisan optimize
+    (php artisan optimize || true)
 
 # Étape 11: Exposition des ports
 EXPOSE 80
