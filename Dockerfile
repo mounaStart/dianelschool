@@ -1,10 +1,9 @@
 # Utilise une image officielle PHP avec Apache
 FROM php:8.2-apache
 
-# Installe les extensions PHP nécessaires à Laravel + PostgreSQL
+# Installe les extensions PHP nécessaires à Laravel
 RUN apt-get update && apt-get install -y \
     git unzip libzip-dev zip libpng-dev libonig-dev libxml2-dev libgd-dev curl \
-    libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl bcmath gd
 
 # Active le module Apache pour réécriture d'URL
@@ -30,6 +29,9 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 RUN test -d vendor || (echo "Vendor folder missing!" && exit 1)
 
 # Copie .env et génère la clé Laravel (APRÈS composer install)
+#RUN cp .env.example .env && php artisan key:generate
+
+# Crée .env à partir de .env.example si non présent
 RUN if [ ! -f .env ]; then cp .env.example .env; fi \
     && php artisan key:generate
     
