@@ -12,7 +12,8 @@ RUN apt-get update && \
         libxml2-dev \
         libgd-dev \
         curl \
-        libpq-dev && \
+        libpq-dev \
+        postgresql-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -28,7 +29,7 @@ RUN docker-php-ext-install \
     bcmath \
     gd \
     opcache && \
-    docker-php-ext-enable opcache
+    docker-php-ext-enable opcache pdo_pgsql
 
 # Étape 4: Configuration Apache
 RUN a2enmod rewrite
@@ -55,27 +56,35 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-d
 # Étape 9: Copie de l'application
 COPY --chown=www-data:www-data . .
 
-# Étape 10: Configuration Laravel (séparée et sécurisée)
-# Génération de la clé d'application seulement si .env n'existe pas
+# Étape 10: Configuration Laravel - Version sécurisée pour Render
+# Crée .env seulement s'il n'existe pas
 RUN if [ ! -f .env ]; then \
         cp .env.example .env && \
-        php artisan key:generate --no-interaction; \
+        chown www-data:www-data .env && \
+        chmod 640 .env; \
     fi
 
-# Étape 11: Commandes artisan exécutées séparément avec gestion d'erreur
-RUN php artisan storage:link --quiet && \
-    php artisan config:clear --quiet && \
-    php artisan view:clear --quiet && \
-    php artisan route:clear --quiet && \
-    php artisan cache:clear --quiet && \
-    (php artisan optimize || true)
+# Configure la base de données pour SSL
+RUN echo -e "\n# Configuration forcée pour PostgreSQL Render" >> .env && \
+    echo "DB_SSLMODE=require" >> .env && \
+    echo "DB_SSL=true" >> .env
+
+# Étape 11: Commandes artisan avec gestion robuste des erreurs
+RUN set -e; \
+    php artisan config:clear --no-interaction || true; \
+    php artisan view:clear --no-interaction || true; \
+    php artisan route:clear --no-interaction || true; \
+    php artisan cache:clear --no-interaction || true; \
+    php artisan storage:link --no-interaction || true; \
+    (php artisan optimize --no-interaction || true); \
+    chown -R www-data:www-data /var/www/html
 
 # Étape 12: Exposition des ports
 EXPOSE 80
 
-# Étape 13: Commande de démarrage optimisée
+# Étape 13: Commande de démarrage optimisée pour Render
 CMD ["sh", "-c", \
     "chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
-    php artisan config:cache && \
-    php artisan view:cache && \
+    php artisan config:cache --no-interaction && \
+    php artisan view:cache --no-interaction && \
     apache2-foreground"]
