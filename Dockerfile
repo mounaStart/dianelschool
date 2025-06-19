@@ -56,21 +56,21 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-d
 # Étape 9: Copie de l'application
 COPY --chown=www-data:www-data . .
 
-# Étape 10: Configuration Laravel (version corrigée)
+# Étape 10: Configuration Laravel (version sécurisée)
 RUN if [ ! -f .env ]; then \
         cp .env.example .env && \
-        echo -e "\nDB_SSLMODE=require\nDB_SSL=true" >> .env && \
+        printf "\nDB_SSLMODE=require\nDB_SSL=true\n" >> .env && \
         chown www-data:www-data .env && \
         chmod 640 .env; \
     fi
 
-# Étape 11: Commandes artisan
-RUN php artisan config:clear --no-interaction && \
-    php artisan view:clear --no-interaction && \
-    php artisan route:clear --no-interaction && \
-    php artisan cache:clear --no-interaction && \
-    php artisan storage:link --no-interaction && \
-    php artisan optimize --no-interaction || true
+# Étape 11: Commandes artisan (séparées pour mieux isoler les erreurs)
+RUN php artisan config:clear --no-interaction
+RUN php artisan view:clear --no-interaction
+RUN php artisan route:clear --no-interaction
+RUN php artisan cache:clear --no-interaction
+RUN php artisan storage:link --no-interaction
+RUN php artisan optimize --no-interaction || true
 
 # Étape 12: Exposition des ports
 EXPOSE 80
