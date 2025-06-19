@@ -88,8 +88,10 @@ autorestart=true\n\
 # Étape 8 : Installer Composer globalement
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+ 
 # Étape 9 : Créer le répertoire de l'application et définir les permissions
 RUN mkdir -p /var/www/html && \
+    mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
