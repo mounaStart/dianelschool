@@ -35,7 +35,8 @@ WORKDIR /var/www/html
 
 # 6. Installation des dépendances COMPOSER (version corrigée)
 COPY composer.json composer.lock ./
-RUN composer install --no-interaction --prefer-dist --no-dev --no-scripts
+RUN composer install --no-interaction --prefer-dist --no-dev --no-scripts --no-autoloader
+RUN composer dump-autoload --optimize
 
 # 7. Configuration des permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} \
