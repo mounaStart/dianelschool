@@ -43,34 +43,68 @@ RUN docker-php-ext-configure gd --with-jpeg --with-webp && \
 
 # Étape 5 : Configurer Apache
 RUN a2enmod rewrite headers && \
-    sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
+    echo '<VirtualHost *:80>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot ${APACHE_DOCUMENT_ROOT}\n\
+    \n\
+    <Directory ${APACHE_DOCUMENT_ROOT}>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    \n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf && \
     sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Étape 6 : Installer Composer globalement
+# Étape 6 : Configurer OPcache
+RUN echo '[opcache]\n\
+opcache.enable=1\n\
+opcache.memory_consumption=128\n\
+opcache.max_accelerated_files=10000\n\
+opcache.revalidate_freq=60\n\
+' > /usr/local/etc/php/conf.d/opcache.ini
+
+# Étape 7 : Configurer Supervisor
+RUN echo '[supervisord]\n\
+nodaemon=true\n\
+logfile=/var/log/supervisor/supervisord.log\n\
+pidfile=/var/run/supervisord.pid\n\
+\n\
+[program:apache2]\n\
+command=/usr/sbin/apache2ctl -D FOREGROUND\n\
+autostart=true\n\
+autorestart=true\n\
+stderr_logfile=/var/log/apache2/error.log\n\
+stdout_logfile=/var/log/apache2/access.log\n\
+\n\
+[program:cron]\n\
+command=/usr/sbin/cron -f\n\
+autostart=true\n\
+autorestart=true\n\
+' > /etc/supervisor/conf.d/supervisord.conf
+
+# Étape 8 : Installer Composer globalement
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Étape 7 : Créer le répertoire de l'application et définir les permissions
+# Étape 9 : Créer le répertoire de l'application et définir les permissions
 RUN mkdir -p /var/www/html && \
     chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Étape 8 : Copier les fichiers de configuration séparément pour mieux utiliser le cache Docker
-COPY ./docker/vhost.conf /etc/apache2/sites-available/000-default.conf
-COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Étape 9 : Copier les fichiers de l'application
+# Étape 10 : Copier les fichiers de l'application
 WORKDIR /var/www/html
 COPY . .
 
-# Étape 10 : Installer les dépendances Composer (en excluant les dépendances de développement en production)
+# Étape 11 : Installer les dépendances Composer
 RUN if [ "$APP_ENV" = "production" ]; then \
         composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader; \
     else \
         composer install --no-interaction --prefer-dist --optimize-autoloader; \
     fi
 
-# Étape 11 : Configurer l'application Laravel
+# Étape 12 : Configurer l'application Laravel
 RUN if [ ! -f .env ]; then \
         cp .env.example .env && \
         php artisan key:generate; \
@@ -78,12 +112,12 @@ RUN if [ ! -f .env ]; then \
     php artisan storage:link && \
     php artisan optimize:clear
 
-# Étape 12 : Nettoyer les fichiers inutiles
+# Étape 13 : Nettoyer les fichiers inutiles
 RUN if [ "$APP_ENV" = "production" ]; then \
         composer clear-cache && \
         rm -rf /tmp/* /var/tmp/* /usr/share/doc/*; \
     fi
 
-# Étape 13 : Exposer le port et définir le CMD
+# Étape 14 : Exposer le port et définir le CMD
 EXPOSE 80
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
