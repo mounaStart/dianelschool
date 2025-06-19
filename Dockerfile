@@ -55,7 +55,7 @@ RUN mkdir -p /var/www/html && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Étape 8 : Copier les fichiers de configuration séparément pour mieux utiliser le cache Docker
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY ./docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
