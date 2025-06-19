@@ -1,48 +1,60 @@
-# Utilise une image officielle PHP avec Apache
+ # Utilise une image officielle PHP avec Apache
 FROM php:8.2-apache
 
-# Variables d'environnement
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
-    COMPOSER_ALLOW_SUPERUSER=1
-
-# Installation des dépendances système
+# Installe les extensions PHP nécessaires à Laravel
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath
+    git unzip libzip-dev zip libpng-dev libonig-dev libxml2-dev libgd-dev curl \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# Configuration d'Apache
-RUN a2enmod rewrite && \
-    sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
-    sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Active le module Apache pour réécriture d'URL
+RUN a2enmod rewrite
 
-# Installation de Composer
+# Installe Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Configuration des permissions
+# Copie le contenu du projet Laravel
+COPY . /var/www/html
+
+# Définit le répertoire de travail
 WORKDIR /var/www/html
-RUN chown -R www-data:www-data /var/www && \
-    mkdir -p storage/framework/{cache,sessions,testing,views} && \
-    mkdir -p bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache
 
-# Copie des fichiers (d'abord seulement ce dont Composer a besoin)
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --prefer-dist --no-scripts
+# Donne les permissions nécessaires AVANT composer install
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
 
-# Copie du reste de l'application
-COPY . .
+# Installe les dépendances Laravel
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Exécution des scripts Composer et configuration Laravel
-RUN composer dump-autoload --optimize && \
-    [ -f .env ] || cp .env.example .env && \
-    php artisan key:generate && \
-    php artisan storage:link
+# Vérifie que le dossier vendor a bien été créé
+RUN test -d vendor || (echo "Vendor folder missing!" && exit 1)
 
-# Port exposé
+# Copie .env et génère la clé Laravel (APRÈS composer install)
+#RUN cp .env.example .env && php artisan key:generate
+
+# Crée .env à partir de .env.example si non présent
+RUN if [ ! -f .env ]; then cp .env.example .env; fi \
+    && php artisan key:generate
+    
+# Redonne les droits après la génération de la clé (par sécurité)
+RUN chmod -R 775 storage bootstrap/cache
+
+# Configuration Apache pour pointer vers /public
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# Expose le port Apache
 EXPOSE 80
+
+# 🔎 Affiche les dernières erreurs Laravel dans les logs si elles existent
+RUN if [ -f storage/logs/laravel.log ]; then \
+        echo "===== DÉBUT LOG LARAVEL =====" && \
+        tail -n 50 storage/logs/laravel.log && \
+        echo "===== FIN LOG LARAVEL ====="; \
+    else \
+        echo "Aucun fichier de log Laravel trouvé."; \
+    fi
