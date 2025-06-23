@@ -1,9 +1,10 @@
 FROM php:8.2-apache
 
-# Dépendances système
-RUN apt-get update && apt-get install -y libpq-dev zip unzip git \
-    && docker-php-ext-install pdo_pgsql \
-    && a2enmod rewrite
+
+# Installer les dépendances nécessaires
+RUN apt-get update && apt-get install -y libpq-dev libjpeg-dev libpng-dev libfreetype6-dev zip unzip git \
+    && docker-php-ext-install pdo_pgsql pgsql bcmath gd
+
 
 # Copie du composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
