@@ -1,27 +1,29 @@
-# Partir d'une image PHP + Apache
 FROM php:8.2-apache
 
-# Installer les dépendances PostgreSQL
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo_pgsql
+# Dépendances système
+RUN apt-get update && apt-get install -y libpq-dev zip unzip git \
+    && docker-php-ext-install pdo_pgsql \
+    && a2enmod rewrite
 
-# Activer le mod_rewrite d'Apache
-RUN a2enmod rewrite
+# Copie du composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copier le vhost personnalisé
+# Copier les fichiers de dépendances en premier
+WORKDIR /var/www/html
+COPY composer.json composer.lock ./
+
+# Installer les dépendances
+RUN composer install --no-dev --optimize-autoloader
+
+# Copier le reste du projet
+COPY ./app/ /var/www/html
+
+# Droits
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Copie du vhost
 COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# Copier le code de l'app dans le container
-COPY ./app/ /var/www/html/
-
-# Configurer les droits
-RUN chown -R www-data:www-data /var/www/html
-
-# Nettoyage
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Exposer le port
 EXPOSE 80
-
-# Démarrer Apache
 CMD ["apache2-foreground"]
