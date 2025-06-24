@@ -76,9 +76,7 @@ return [
     'prefix_indexes' => true,
     'search_path' => 'public',
     'sslmode' => 'require', // Changé de 'prefer' à 'require'
-    'options' => [
-        PDO::PGSQL_ATTR_SSL_CERT_MODE => PDO::SSL_CERT_REQUIRE, // Ajouté
-    ],
+     
     ],
 
         'sqlsrv' => [
