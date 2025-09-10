@@ -21,7 +21,7 @@
            
 <input type="hidden" name="annee_scolaire_id" value="{{ request('annee_scolaire_id') }}">
 
-            <!-- Row 1: Nom, Prénom, Classe -->
+            <!-- Row 1: Nom, Prénom, Adresse, Sexe -->
             <div class="form-row form-section">
                 <div class="form-group col-md-2">
                     <label for="nom">Nom: <b style="color:red;">*</b></label>
@@ -63,23 +63,23 @@
             </div> -->
 
             <!-- Row 2: Type élève, Moyen de Transport -->
-            <div class="form-row form-section">
-                <div class="form-group col-md-4">
+<!--             <div class="form-row form-section"> -->
+<!--                 <div class="form-group col-md-4">
                     <label for="type_eleve">Type élève: <b style="color:red;">*</b></label><br>
                     <select name="type_eleve" class="form-control" required>
                         <option value="Passant" {{ old('type_eleve') == 'Passant' ? 'selected' : '' }}>Passant</option>
                         <option value="Nouveau" {{ old('type_eleve') == 'Nouveau' ? 'selected' : '' }}>Nouveau</option>
                         <option value="Redoublant" {{ old('type_eleve') == 'Redoublant' ? 'selected' : '' }}>Redoublant</option>
                     </select>
-                </div>
-                <div class="form-group col-md-4">
+                </div> -->
+<!--                 <div class="form-group col-md-4">
                     <label for="moyen_transport">Moyen de Transport: <b style="color:red;">*</b></label><br>
                     <select name="moyen_transport" class="form-control" required>
                         <option value="Public" {{ old('moyen_transport') == 'Public' ? 'selected' : '' }}>Public</option>
                         <option value="Privé" {{ old('moyen_transport') == 'Privé' ? 'selected' : '' }}>Privé</option>
                     </select>
-                </div>
-                <div class="form-group col-md-4">
+                </div> -->
+<!--                 <div class="form-group col-md-4">
                     <label for="classe_id">Classe: <b style="color:red;">*</b></label>
                     <select name="classe_id" class="form-control" required>
                         @foreach ($classes as $classe)
@@ -88,18 +88,26 @@
                     </select>
                 </div>
               
-            </div>
-            <!-- Row 5: Téléphone 2, Nom des Parents -->
+            </div> -->
+            <!-- Row 5:Classe,  Téléphone 2, Nom des Parents -->
             <div class="form-row form-section">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
+                    <label for="classe_id">Classe: <b style="color:red;">*</b></label>
+                    <select name="classe_id" class="form-control" required>
+                        @foreach ($classes as $classe)
+                            <option value="{{ $classe->id }}" {{ old('classe_id') == $classe->id ? 'selected' : '' }}>{{ $classe->nom }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
                     <label for="nomParent">Nom Parent: <b style="color:red;">*</b></label>
                     <input type="text" name="nomParent" class="form-control" id="nomParent" placeholder="Nom des parents" value="{{ old('nomParent') }}" required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label for="prenomParent">Prénom Parent: <b style="color:red;">*</b></label>
                     <input type="text" name="prenomParent" class="form-control" id="prenomParent" placeholder="Prenom des parents" value="{{ old('prenomParent') }}" required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label for="relation">Relation : <b style="color:red;">*</b></label><br>
                     <select name="relation" class="form-control" id="relation" required>
                         <option value="Père" {{ old('relation') == 'Père' ? 'selected' : '' }}>Père</option>
