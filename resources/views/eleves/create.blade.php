@@ -43,7 +43,7 @@
                     </select>
                 </div>
             </div>
-            <div class="form-row form-section">
+<!--             <div class="form-row form-section">
                 <div class="form-group col-md-3">
                     <label for="date_naissance">Date de Naissance: <b style="color:red;">*</b></label>
                     <input type="date" name="date_naissance" class="form-control" id="date_naissance" value="{{ old('date_naissance') }}" required>
@@ -60,7 +60,7 @@
                     <label for="nationalite">Nationalité: <b style="color:red;">*</b></label>
                     <input type="text" name="nationalite" class="form-control" id="nationalite" placeholder="Entrer nationalité" value="{{ old('nationalite') }}" required>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Row 2: Type élève, Moyen de Transport -->
             <div class="form-row form-section">
