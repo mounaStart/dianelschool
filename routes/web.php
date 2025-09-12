@@ -30,13 +30,13 @@ use App\Models\{Classe, Eleve};
 */
 
 Route::get('/', function () {
-    return view('accueil'); // Affiche votre belle page d'accueil (accueil.blade.php)
-})->name('accueil'); // Donne un nom à la route
+  
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        $user = Auth::user();
+if (auth()->check()) 
+    {
+        $user = auth()->user();
 
+      
         // Si l'utilisateur est un enseignant, rediriger vers leur dashboard
         if ($user->hasRole('enseignant')) {
             return redirect('/enseignants/dashboard');
@@ -59,8 +59,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Sinon, rediriger vers login ou erreur 403
         abort(403, 'Accès refusé.');
-    });
-});
+    }
+     return view('accueil');
+})->name('accueil');
+
+        
 Auth::routes();
 Route::middleware('auth')->group(function () {
     Route::get('/mon-profil', [ProfilController::class, 'show'])->name('profil.show');
