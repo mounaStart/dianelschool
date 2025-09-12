@@ -36,7 +36,7 @@
             </a>
             <div class="navbar-nav ms-auto">
                 <a href="{{ route('login') }}" class="btn btn-outline-primary me-2">Connexion</a>
-                <a href="{{ route('register') }}" class="btn btn-primary">Inscription</a>
+                <a href="{{ route('register') }}" class="btn btn-primary"></a>
             </div>
         </div>
     </nav>
@@ -46,7 +46,7 @@
         <div class="container">
             <h1 class="display-4 fw-bold mb-4">Bienvenue sur Gestion Scolaire</h1>
             <p class="lead mb-4">La solution complète pour gérer votre établissement scolaire</p>
-            <a href="{{ route('inscription') }}" class="btn btn-light btn-lg px-5">Commencer</a>
+            <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5">Commencer</a>
         </div>
     </section>
 
@@ -137,7 +137,7 @@
         <div class="container text-center">
             <h2 class="fw-bold mb-4">Prêt à transformer la gestion de votre établissement ?</h2>
             <p class="lead mb-4">Rejoignez dès aujourd'hui notre plateforme complète de gestion scolaire</p>
-            <a href="{{ route('inscription') }}" class="btn btn-primary btn-lg px-5">Créer un compte</a>
+            <a href="{{ route('register') }}" class="btn btn-primary btn-lg px-5">Créer un compte</a>
         </div>
     </section>
 
