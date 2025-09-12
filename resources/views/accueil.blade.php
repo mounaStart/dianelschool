@@ -35,8 +35,8 @@
                 <i class="fas fa-graduation-cap me-2"></i>Gestion Scolaire
             </a>
             <div class="navbar-nav ms-auto">
-                <a href="{{ route('connexion') }}" class="btn btn-outline-primary me-2">Connexion</a>
-                <a href="{{ route('inscription') }}" class="btn btn-primary">Inscription</a>
+                <a href="{{ route('login') }}" class="btn btn-outline-primary me-2">Connexion</a>
+                <a href="{{ route('register') }}" class="btn btn-primary">Inscription</a>
             </div>
         </div>
     </nav>
