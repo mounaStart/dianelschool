@@ -58,7 +58,8 @@ if (auth()->check())
         }
 
         // Sinon, rediriger vers login ou erreur 403
-        abort(403, 'Accès refusé.');
+        //abort(403, 'Accès refusé.');
+         return view('home');
     }
      return view('accueil');
 })->name('accueil');
