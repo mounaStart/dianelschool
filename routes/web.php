@@ -34,7 +34,7 @@ Route::get('/', function () {
 })->name('accueil'); // Donne un nom à la route
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', function () {
+    Route::get('/dashboard', function () {
         $user = Auth::user();
 
         // Si l'utilisateur est un enseignant, rediriger vers leur dashboard
