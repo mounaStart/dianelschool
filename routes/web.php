@@ -30,10 +30,11 @@ use App\Models\{Classe, Eleve};
 */
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', function () {
+
+    // Nouvelle route pour le tableau de bord (remplace la route '/')
+    Route::get('/dashboard', function () {
         $user = Auth::user();
 
-        // Si l'utilisateur est un enseignant, rediriger vers leur dashboard
         if ($user->hasRole('enseignant')) {
             return redirect('/enseignants/dashboard');
         }
@@ -41,8 +42,7 @@ Route::middleware(['auth'])->group(function () {
             return redirect('/parents/dashboard');
         }
       
-        
-        // Seul l'admin peut accéder à la page welcome
+        // Seul l'admin peut accéder au tableau de bord admin
         if ($user->hasRole('admin') ) {
             $totalClasses = Classe::count();
             $totalEleves = Eleve::count();
@@ -50,12 +50,16 @@ Route::middleware(['auth'])->group(function () {
             $nombreFilles = Eleve::where('sexe', 'Féminin')->count();
             $dernieresEleves = Eleve::where('suspendu', 1)->latest()->take(10)->get();
 
+            // Changez 'welcome' pour 'admin.dashboard' ou gardez 'welcome'
+            // si c'est bien la vue de votre dashboard admin
             return view('welcome', compact('totalClasses', 'totalEleves', 'nombreGarcons', 'nombreFilles', 'dernieresEleves'));
         }
 
-        // Sinon, rediriger vers login ou erreur 403
         abort(403, 'Accès refusé.');
-    });
+    })->name('dashboard'); // Donnez-lui un nom
+
+    // Vos autres routes protégées...
+    Route::get('/mon-profil', [ProfilController::class, 'show'])->name('profil.show');
 });
 Auth::routes();
 Route::middleware('auth')->group(function () {
