@@ -82,8 +82,8 @@ public function store(Request $request)
             'nomParent' => 'required|string|max:255',
             'prenomParent' => 'required|string|max:255',
             'relation' => 'required|string|max:255',
-            'telephone' => 'required|numeric',
-            'email' => 'required|email|max:255|unique:users,email|unique:parent_eleves,email',
+            'telephone' => 'required|numeric|unique:parents,telephone',
+            'email' => 'required|email|max:255|unique:users,email|unique:parents,email',
             // ↑ Validation unique pour les DEUX tables ↑
         ], [
             'email.unique' => 'Cette adresse email est déjà utilisée.',
