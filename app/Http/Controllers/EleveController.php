@@ -62,6 +62,7 @@ class EleveController extends Controller
 
     public function store(Request $request)
     {
+        try {
         // Validation des données du formulaire
         $request->validate([
             // Champs pour l'élève
@@ -94,6 +95,7 @@ class EleveController extends Controller
             'password' => Hash::make('123456789'),
         ]);
         // Enregistrement du parent
+             $user->roles()->attach(Role::where('name', 'parent')->first()->id);
         $parent = ParentEleve::create([
             'nom' => $request->nomParent,
             'prenom' => $request->prenomParent,
@@ -104,17 +106,8 @@ class EleveController extends Controller
         ]);
        
         
-        $user->roles()->attach(Role::where('name', 'parent')->first()->id);
-        // Enregistrement du parent
-        $parent = ParentEleve::create([
-            'nom' => $request->nomParent,
-            'prenom' => $request->prenomParent,
-            'relation' => $request->relation,
-            'telephone' => $request->telephone,
-            'email' => $request->email,
-            'user_id' => $user->id,
-        ]);
-        
+       
+       
      
         // Création de l'élève en associant le parent
         Eleve::create([
