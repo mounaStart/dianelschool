@@ -130,7 +130,32 @@ class EleveController extends Controller
     
         return redirect()->route('eleves.index')->with('success', 'Élève inscrit avec succès.');
     }
-    
+             } catch (QueryException $e) {
+        // Capturer l'erreur de violation de contrainte d'intégrité
+        $errorCode = $e->errorInfo[1];
+        
+        if ($errorCode == 1062) { // Code d'erreur MySQL pour duplicate entry
+            // Vérifier si l'erreur concerne l'email
+            if (str_contains($e->getMessage(), 'parents_email_unique')) {
+                return back()->withInput()->withErrors([
+                    'email' => 'Cette adresse email est déjà utilisée par un parent.'
+                ]);
+            }
+            
+            // Gérer d'autres contraintes uniques si nécessaire
+            if (str_contains($e->getMessage(), 'autre_contrainte_unique')) {
+                return back()->withInput()->withErrors([
+                    'champ' => 'Message d\'erreur personnalisé.'
+                ]);
+            }
+        }
+
+        // Pour toutes les autres erreurs SQL
+        return back()->withInput()->withErrors([
+            'general' => 'Une erreur de base de données s\'est produite.'
+        ]);
+    }
+    }
     // Detaille eleves 
     public function show($id)
     {
