@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Eleve;
+use App\Models\User;
 use App\Models\Classe;
 use App\Models\ParentEleve ;
 use App\Exports\ElevesExport;
