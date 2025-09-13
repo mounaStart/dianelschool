@@ -59,11 +59,7 @@ class EleveController extends Controller
 
         return view('eleves.create',compact('anneesScolaires') ,compact('classes') ,  compact('parents'));
     }
-   use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Hash;
-use App\Models\{User, Role, ParentEleve, Eleve};
-use Illuminate\Support\Facades\Log; // Pour logger les erreurs si besoin
-
+  
 public function store(Request $request)
 {
     try {
