@@ -59,7 +59,12 @@ class EleveController extends Controller
 
         return view('eleves.create',compact('anneesScolaires') ,compact('classes') ,  compact('parents'));
     }
-    public function store(Request $request)
+   use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Hash;
+use App\Models\{User, Role, ParentEleve, Eleve};
+use Illuminate\Support\Facades\Log; // Pour logger les erreurs si besoin
+
+public function store(Request $request)
 {
     try {
         // Validation des données du formulaire
@@ -82,10 +87,11 @@ class EleveController extends Controller
             'prenomParent' => 'required|string|max:255',
             'relation' => 'required|string|max:255',
             'telephone' => 'required|numeric',
-            'email' => 'required|email|max:255|unique:parents,email',
+            'email' => 'required|email|max:255|unique:users,email|unique:parent_eleves,email',
+            // ↑ Validation unique pour les DEUX tables ↑
         ], [
-            'email.unique' => 'Cette adresse email est déjà utilisée par un parent.',
-            // Ajoutez d'autres messages personnalisés ici si besoin
+            'email.unique' => 'Cette adresse email est déjà utilisée.',
+            // Messages personnalisés pour les autres champs...
         ]);
 
         // Gestion de la photo
@@ -102,7 +108,14 @@ class EleveController extends Controller
         ]);
 
         // Attribution du rôle "parent" à l'utilisateur
-        $user->roles()->attach(Role::where('name', 'parents')->first()->id);
+        $parentRole = Role::where('name', 'parent')->first();
+        if (!$parentRole) {
+            $parentRole = Role::create([
+                'name' => 'parent',
+                'guard_name' => 'web'
+            ]);
+        }
+        $user->roles()->attach($parentRole->id);
 
         // Enregistrement du parent
         $parent = ParentEleve::create([
@@ -127,7 +140,7 @@ class EleveController extends Controller
             'type_eleve' => $request->type_eleve,
             'moyen_transport' => $request->moyen_transport,
             'classe_id' => $request->classe_id,
-            'annee_scolaire_id' => $request->annee_scolaire_id, // Utilisez la valeur du formulaire
+            'annee_scolaire_id' => $request->annee_scolaire_id,
             'parent_id' => $parent->id,
             'photo' => $photoPath,
         ]);
@@ -138,9 +151,16 @@ class EleveController extends Controller
         // Capturer l'erreur de violation de contrainte d'intégrité
         $errorCode = $e->errorInfo[1];
         
-        if ($errorCode == 1062) {
-            // Vérifier si l'erreur concerne l'email
-            if (str_contains($e->getMessage(), 'parents_email_unique')) {
+        if ($errorCode == 1062) { // Code d'erreur MySQL pour duplicate entry
+            // Vérifier si l'erreur concerne l'email dans la table USERS
+            if (str_contains($e->getMessage(), 'users_email_unique')) {
+                return back()->withInput()->withErrors([
+                    'email' => 'Cette adresse email est déjà utilisée pour un compte utilisateur.'
+                ]);
+            }
+            
+            // Vérifier si l'erreur concerne l'email dans la table PARENTS
+            if (str_contains($e->getMessage(), 'parent_eleves_email_unique')) {
                 return back()->withInput()->withErrors([
                     'email' => 'Cette adresse email est déjà utilisée par un parent.'
                 ]);
@@ -155,12 +175,12 @@ class EleveController extends Controller
         }
 
         // Pour toutes les autres erreurs SQL
+        Log::error('Erreur base de données lors de la création élève: ' . $e->getMessage());
         return back()->withInput()->withErrors([
-            'general' => 'Une erreur de base de données s\'est produite.'
+            'general' => 'Une erreur inattendue s\'est produite. Veuillez réessayer.'
         ]);
     }
 }
-
    
     // Detaille eleves 
     public function show($id)
