@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 namespace App\Http\Controllers;
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\Eleve;
 use App\Models\User;
