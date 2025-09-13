@@ -15,7 +15,7 @@ use App\Models\ParentEleve ;
 use App\Exports\ElevesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AllDataExport;
-
+use App\Models\Role;
 class EleveController extends Controller
 {
 
