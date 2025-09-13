@@ -102,7 +102,7 @@ class EleveController extends Controller
         ]);
 
         // Attribution du rôle "parent" à l'utilisateur
-        $user->roles()->attach(Role::where('name', 'parent')->first()->id);
+        $user->roles()->attach(Role::where('name', 'parents')->first()->id);
 
         // Enregistrement du parent
         $parent = ParentEleve::create([
