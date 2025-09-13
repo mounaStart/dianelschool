@@ -59,43 +59,52 @@ class EleveController extends Controller
 
         return view('eleves.create',compact('anneesScolaires') ,compact('classes') ,  compact('parents'));
     }
-
     public function store(Request $request)
-    {
-        try {
+{
+    try {
         // Validation des données du formulaire
-        $request->validate([
+        $validatedData = $request->validate([
             // Champs pour l'élève
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
             'adresse' => 'required|string|max:255',
-            'numero_national' => 'numeric',
+            'numero_national' => 'nullable|numeric',
             'sexe' => 'required',
-            'nationalite' => 'string|max:255',
-            'date_naissance' => 'date',
-            'lieux_naissance' => 'string|max:255',
+            'nationalite' => 'nullable|string|max:255',
+            'date_naissance' => 'nullable|date',
+            'lieux_naissance' => 'nullable|string|max:255',
             'classe_id' => 'required|exists:classes,id',
-            'annee_scolaire_id' => 'required|exists:annee_scolaires,id', // Assurez-vous que ce champ est présent dans le formulaire
-        
+            'annee_scolaire_id' => 'required|exists:annee_scolaires,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-    
+
             // Champs pour le parent
             'nomParent' => 'required|string|max:255',
             'prenomParent' => 'required|string|max:255',
             'relation' => 'required|string|max:255',
             'telephone' => 'required|numeric',
-            'email' => 'required|email|max:255',
+            'email' => 'required|email|max:255|unique:parent_eleves,email',
+        ], [
+            'email.unique' => 'Cette adresse email est déjà utilisée par un parent.',
+            // Ajoutez d'autres messages personnalisés ici si besoin
         ]);
-    
+
         // Gestion de la photo
-        $photoPath = $request->hasFile('photo') ? $request->file('photo')->store('photos', 'public') : null;
-     $user = User::create([
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos', 'public');
+        }
+
+        // Création de l'utilisateur parent
+        $user = User::create([
             'name' => $request->prenomParent . ' ' . $request->nomParent,
             'email' => $request->email,
             'password' => Hash::make('123456789'),
         ]);
+
+        // Attribution du rôle "parent" à l'utilisateur
+        $user->roles()->attach(Role::where('name', 'parent')->first()->id);
+
         // Enregistrement du parent
-             $user->roles()->attach(Role::where('name', 'parent')->first()->id);
         $parent = ParentEleve::create([
             'nom' => $request->nomParent,
             'prenom' => $request->prenomParent,
@@ -104,11 +113,7 @@ class EleveController extends Controller
             'email' => $request->email,
             'user_id' => $user->id,
         ]);
-       
-        
-       
-       
-     
+
         // Création de l'élève en associant le parent
         Eleve::create([
             'nom' => $request->nom,
@@ -122,19 +127,18 @@ class EleveController extends Controller
             'type_eleve' => $request->type_eleve,
             'moyen_transport' => $request->moyen_transport,
             'classe_id' => $request->classe_id,
-            'annee_scolaire_id' => 1,
-             
-            'parent_id' => $parent->id, // Associe l'élève au parent
-            'photo' => $photoPath, // Stocke le chemin de la photo
+            'annee_scolaire_id' => $request->annee_scolaire_id, // Utilisez la valeur du formulaire
+            'parent_id' => $parent->id,
+            'photo' => $photoPath,
         ]);
-    
+
         return redirect()->route('eleves.index')->with('success', 'Élève inscrit avec succès.');
-    }
-             } catch (QueryException $e) {
+
+    } catch (QueryException $e) {
         // Capturer l'erreur de violation de contrainte d'intégrité
         $errorCode = $e->errorInfo[1];
         
-        if ($errorCode == 1062) { // Code d'erreur MySQL pour duplicate entry
+        if ($errorCode == 1062) {
             // Vérifier si l'erreur concerne l'email
             if (str_contains($e->getMessage(), 'parents_email_unique')) {
                 return back()->withInput()->withErrors([
@@ -155,7 +159,9 @@ class EleveController extends Controller
             'general' => 'Une erreur de base de données s\'est produite.'
         ]);
     }
-    }
+}
+
+   
     // Detaille eleves 
     public function show($id)
     {
