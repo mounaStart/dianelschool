@@ -87,7 +87,11 @@ class EleveController extends Controller
     
         // Gestion de la photo
         $photoPath = $request->hasFile('photo') ? $request->file('photo')->store('photos', 'public') : null;
-    
+     $user = User::create([
+            'name' => $request->prenomParent . ' ' . $request->nomParent,
+            'email' => $request->email,
+            'password' => Hash::make('123456789'),
+        ]);
         // Enregistrement du parent
         $parent = ParentEleve::create([
             'nom' => $request->nomParent,
@@ -97,11 +101,7 @@ class EleveController extends Controller
             'email' => $request->email,
             'user_id' => $user->id,
         ]);
-        $user = User::create([
-            'name' => $request->prenomParent . ' ' . $request->nomParent,
-            'email' => $request->email,
-            'password' => Hash::make('123456789'),
-        ]);
+       
         
         $user->roles()->attach(Role::where('name', 'parent')->first()->id);
         // Enregistrement du parent
