@@ -67,13 +67,11 @@ class EleveController extends Controller
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
             'adresse' => 'required|string|max:255',
-            'numero_national' => 'required|numeric',
+            'numero_national' => 'numeric',
             'sexe' => 'required',
-            'nationalite' => 'required|string|max:255',
-            'date_naissance' => 'required|date',
-            'lieux_naissance' => 'required|string|max:255',
-            'type_eleve' => 'required',
-            'moyen_transport' => 'required',
+            'nationalite' => 'string|max:255',
+            'date_naissance' => 'date',
+            'lieux_naissance' => 'string|max:255',
             'classe_id' => 'required|exists:classes,id',
             'annee_scolaire_id' => 'required|exists:annee_scolaires,id', // Assurez-vous que ce champ est présent dans le formulaire
         
