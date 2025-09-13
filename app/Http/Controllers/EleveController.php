@@ -82,7 +82,7 @@ class EleveController extends Controller
             'prenomParent' => 'required|string|max:255',
             'relation' => 'required|string|max:255',
             'telephone' => 'required|numeric',
-            'email' => 'required|email|max:255|unique:ParentEleve,email',
+            'email' => 'required|email|max:255|unique:parents,email',
         ], [
             'email.unique' => 'Cette adresse email est déjà utilisée par un parent.',
             // Ajoutez d'autres messages personnalisés ici si besoin
